@@ -121,8 +121,27 @@ def scrape_data(start_year, start_month, end_year, end_month, target_penyakit_co
                                         'hpar1': str(current_month), 'hpar2': str(current_year),
                                         'tbl_proses': 'P R O S E S'
                                     }
-                                    # Added a timeout to the main data request
-                                    response = session.post(rekap_url, data=payload, timeout=30)
+                                    
+                                    # --- Retry Logic Added Here ---
+                                    response = None
+                                    max_retries = 3
+                                    retry_delay = 5 # Start with a 5-second delay
+                                    for attempt in range(max_retries):
+                                        try:
+                                            response = session.post(rekap_url, data=payload, timeout=30)
+                                            response.raise_for_status() # Raise an exception for bad status codes
+                                            break # If successful, exit the retry loop
+                                        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as e:
+                                            print(f"    - Network error: {e}. Retrying in {retry_delay}s... (Attempt {attempt + 1}/{max_retries})")
+                                            time.sleep(retry_delay)
+                                            retry_delay *= 2 # Exponential backoff
+                                    
+                                    if response is None:
+                                        print(f"    - FAILED to fetch data for this combination after {max_retries} attempts. Skipping.")
+                                        continue # Skip to the next iteration if all retries fail
+                                    
+                                    # --- End of Retry Logic ---
+
                                     soup = BeautifulSoup(response.text, 'html.parser')
                                     data_table = soup.find('table', id='example2a')
 
@@ -142,7 +161,6 @@ def scrape_data(start_year, start_month, end_year, end_month, target_penyakit_co
                                             df_tidy.dropna(subset=['Tanggal'], inplace=True)
                                             df_tidy['Jumlah Kasus'] = pd.to_numeric(df_tidy['Jumlah Kasus'], errors='coerce').fillna(0).astype(int)
                                             
-                                            # Filter out rows where the number of cases is zero
                                             df_tidy = df_tidy[df_tidy['Jumlah Kasus'] > 0]
 
                                             if not df_tidy.empty:
@@ -158,7 +176,6 @@ def scrape_data(start_year, start_month, end_year, end_month, target_penyakit_co
                 if monthly_dataframes:
                     month_df = pd.concat(monthly_dataframes, ignore_index=True)
                     
-                    # Sanitize disease name for filename
                     disease_name = disease_map.get(target_penyakit_code, 'UnknownDisease')
                     safe_disease_name = re.sub(r'[^a-zA-Z0-9_-]', '_', disease_name)
 
@@ -182,14 +199,12 @@ if __name__ == "__main__":
         s.headers.update(headers)
         print("Initializing session...")
         try:
-            # Added a timeout to the initial session request
             s.get(rekap_url, timeout=30).raise_for_status()
             print("Session initialized successfully.")
             
             available_diseases = get_all_diseases(s)
 
             if available_diseases:
-                # Get user input
                 penyakit_code = input("\nEnter the disease code you want to scrape: ")
                 while penyakit_code not in available_diseases:
                     print("Invalid code. Please choose a code from the list above.")
@@ -201,12 +216,11 @@ if __name__ == "__main__":
                 end_month_in = input(f"Enter the end month (1-12) [Default: {now.month}]: ") or now.month
                 end_year_in = input(f"Enter the end year [Default: {now.year}]: ") or now.year
 
-                # Run the scraper with user-provided inputs
                 scrape_data(
                     start_year=int(start_year_in), start_month=int(start_month_in),
                     end_year=int(end_year_in), end_month=int(end_month_in),
                     target_penyakit_code=penyakit_code, headers_dict=headers,
-                    disease_map=available_diseases # Pass the disease map for filenames
+                    disease_map=available_diseases 
                 )
             else:
                 print("\nCould not fetch the list of diseases. Cannot proceed.")
