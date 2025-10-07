@@ -14,11 +14,9 @@ Before you begin, ensure you have the following installed on your system:
 You will also need to install the required Python libraries. You can do this by running the following command in your terminal or command prompt:
 - pip install requests beautifulsoup4 pandas
 
-
-
 ## How to Use
 Follow these two main steps to scrape and then merge the data.
-- Step 1: Scrape the Data (scraper.py)
+### Step 1: Scrape the Data (scraper.py)
 This script connects to the website, asks for your scraping criteria, and saves the data in monthly chunks.
 
 1\. Place the Script:
@@ -49,7 +47,7 @@ The script will begin the scraping process, which can be very long depending on 
 
 If a network error occurs, the script will automatically retry a few times before skipping the problematic item and continuing.
 
-- Step 2: Merge the Scraped Files (merger.py)
+### Step 2: Merge the Scraped Files (merger.py)
 
 After the scraper has finished and you have multiple monthly CSV files, you can use this script to combine them.
 
