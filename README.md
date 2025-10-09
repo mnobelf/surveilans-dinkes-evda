@@ -14,8 +14,9 @@ Before you begin, ensure you have the following installed on your system:
 * Python 3: The scripts are written in Python. You can download it from python.org.
 * pip: Python's package installer, which usually comes with Python 3.
   You will also need to install the required Python libraries. You can do this by running the following command in your terminal or command prompt:
-* pip install requests beautifulsoup4 pandas
-
+```
+pip install requests beautifulsoup4 pandas
+```
 ## How to Use
 
 Follow these two main steps to scrape and then merge the data.
