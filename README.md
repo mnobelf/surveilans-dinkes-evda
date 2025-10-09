@@ -29,11 +29,12 @@ Save scraping.py in a new, empty folder on your computer. This folder is where a
 
 2\. Run the Script:
 Open a terminal or command prompt, navigate to the folder where you saved the script, and run it with the following command:
+```
 python scraping.py
-
+```
 3\. Follow the Prompts:
 The script will first fetch a list of all available diseases and display them with their corresponding codes.
-
+```
 --- Fetching Full Disease List ---
 Please use one of the following codes for the disease input:
   Code: 1    Name: 01. GED
@@ -41,7 +42,7 @@ Please use one of the following codes for the disease input:
   Code: 3    Name: 03. DIPHTERI
   ...
   Code: 34   Name: 34. COVID-19
-
+```
 You will then be prompted to enter your desired scraping parameters:
 
 Disease Code: Enter the code for the disease you want to scrape (e.g., 34).
@@ -61,8 +62,9 @@ Make sure merge.py is in the same folder as scraping.py and all the generated CS
 
 2\. Run the Script:
 In your terminal, run the script:
+```
 python merge.py
-
+```
 3\. Follow the Prompts:
 The script will ask for the information needed to identify the files you want to merge:
 
