@@ -17,6 +17,7 @@ import re
 def merge_csv_files():
     """
     Prompts the user for a disease and date range, then merges the corresponding CSV files.
+    It will now ignore missing files and merge only the ones it finds.
     """
     print("--- Health Data CSV Merger ---")
     
@@ -40,32 +41,36 @@ def merge_csv_files():
         print("❌ Error: Invalid date range provided.")
         return
 
-    required_files = []
+    expected_files = []
     for dt in date_range:
         filename = f'jakarta_health_data_{disease_identifier_input}_{dt.strftime("%Y-%m")}.csv'
-        required_files.append(filename)
+        expected_files.append(filename)
 
-    missing_files = [f for f in required_files if not os.path.exists(f)]
+    # Find which files actually exist and which are missing
+    found_files = [f for f in expected_files if os.path.exists(f)]
+    missing_files = [f for f in expected_files if not os.path.exists(f)]
 
+    # If some files are missing, print a warning but continue
     if missing_files:
-        print("\n❌ Error: Merging cancelled. The following required files were not found:")
+        print("\n⚠️ Warning: The following files were not found and will be skipped.")
+        print("   (This is expected for months where the scraper found zero cases.)")
         for f in missing_files:
-            print(f"  - {f}")
+            print(f"  - Skipped: {f}")
+
+    # If no files were found at all, then stop
+    if not found_files:
+        print("\n❌ Error: No data files were found for the specified disease and date range. Merging cancelled.")
         return
 
-    print(f"\n✅ All {len(required_files)} required files found. Proceeding with merge...")
+    print(f"\n✅ Found {len(found_files)} files to merge. Proceeding...")
 
     # --- Read and Merge the Files ---
     all_dataframes = []
     try:
-        for filename in required_files:
+        for filename in found_files:
             df = pd.read_csv(filename)
             all_dataframes.append(df)
         
-        if not all_dataframes:
-            print("No data to merge.")
-            return
-
         merged_df = pd.concat(all_dataframes, ignore_index=True)
         
         # --- Save the Merged File ---
@@ -77,7 +82,7 @@ def merge_csv_files():
         
         print("\n" + "="*50)
         print("🎉 Merge Complete! 🎉")
-        print(f"Successfully merged {len(merged_df)} rows from {len(required_files)} files.")
+        print(f"Successfully merged {len(merged_df)} rows from {len(found_files)} files.")
         print(f"Data has been exported to '{output_filename}'")
         print("="*50 + "\n")
 
